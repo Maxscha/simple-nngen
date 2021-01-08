@@ -81,19 +81,19 @@ def main(train_diff_file :str, train_msg_file :str, train_repos_file :str,
     test_diffs = load_data(test_diff_file)
     test_repos = load_data(test_repos_file)
     
-    inc_full_out_repos_file =  "./inc_full_nngen." + test_basename.replace('.diff', '.repos')
-    inc_out_repos_file =  "./inc_nngen." + test_basename.replace('.diff', '.repos')
-    exc_out_repos_file =  "./exc_nngen." + test_basename.replace('.diff', '.repos')
-    out_repos_file =  "./nngen." + test_basename.replace('.diff', '.repos')
+    inc_full_out_repos_file =  "./files/data/results/inc_full_nngen." + test_basename.replace('.diff', '.repos')
+    inc_out_repos_file =  "./files/data/results/inc_nngen." + test_basename.replace('.diff', '.repos')
+    exc_out_repos_file =  "./files/data/results/exc_nngen." + test_basename.replace('.diff', '.repos')
+    out_repos_file =  "./files/data/results/nngen." + test_basename.replace('.diff', '.repos')
     
-    inc_full_out_file =  "./inc_full_nngen." + test_basename.replace('.diff', '.msg')
+    inc_full_out_file =  "./files/data/results/inc_full_nngen." + test_basename.replace('.diff', '.msg')
     inc_full_out_res = nngen(train_diffs, train_msgs, test_diffs, train_repos, test_repos, 'inc', len(train_diffs))
     with open(inc_full_out_file, 'w') as out_f:
         out_f.write("\n".join(inc_full_out_res[0]) + "\n")
     with open(inc_full_out_repos_file, 'w') as out_f:
         out_f.write("\n".join(inc_full_out_res[1]) + "\n")
         
-    inc_out_file =  "./inc_nngen." + test_basename.replace('.diff', '.msg')
+    inc_out_file =  "./files/data/results/inc_nngen." + test_basename.replace('.diff', '.msg')
     inc_out_res = nngen(train_diffs, train_msgs, test_diffs, train_repos, test_repos, 'inc')
     with open(inc_out_file, 'w') as out_f:
         out_f.write("\n".join(inc_out_res[0]) + "\n")
@@ -101,13 +101,13 @@ def main(train_diff_file :str, train_msg_file :str, train_repos_file :str,
         out_f.write("\n".join(inc_out_res[1]) + "\n")
     
     exc_out_res = nngen(train_diffs, train_msgs, test_diffs, train_repos, test_repos, 'exc')
-    exc_out_file =  "./exc_nngen." + test_basename.replace('.diff', '.msg')
+    exc_out_file =  "./files/data/results/exc_nngen." + test_basename.replace('.diff', '.msg')
     with open(exc_out_file, 'w') as out_f:
         out_f.write("\n".join(exc_out_res[0]) + "\n")
     with open(exc_out_repos_file, 'w') as out_f:
         out_f.write("\n".join(exc_out_res[1]) + "\n")
     
-    out_file =  "./nngen." + test_basename.replace('.diff', '.msg')
+    out_file =  "./files/data/results/nngen." + test_basename.replace('.diff', '.msg')
     out_res = nngen(train_diffs, train_msgs, test_diffs, train_repos, test_repos)
     with open(out_file, 'w') as out_f:
         out_f.write("\n".join(out_res[0]) + "\n")
@@ -118,6 +118,9 @@ def main(train_diff_file :str, train_msg_file :str, train_repos_file :str,
     time_cost = time.time() -start_time
     print("Done, cost {}s".format(time_cost))
 
+    for algo in ["nngen", "inc_nngen", "exc_nngen"]:
+        print(algo)
+        compute_bleu_scores(algo)
 
 
 #     test_repos = load_data("./files/data/test.projectIds")
@@ -149,9 +152,9 @@ def main(train_diff_file :str, train_msg_file :str, train_repos_file :str,
 #     print ("Number of known exc_nngen repos similar to the test repos: " + str(cnt))
 
 def compute_bleu_scores(algorithm :str):
-    algo_repos = load_data("./files/data/" + algorithm + ".test.repos")
+    algo_repos = load_data("./files/data/results/" + algorithm + ".test.repos")
     test_repos = load_data("./files/data/test.projectIds")
-    algo_msgs = load_data("./files/data/" + algorithm + ".test.msg")
+    algo_msgs = load_data("./files/data/results/" + algorithm + ".test.msg")
     test_msgs = load_data("./files/data/test.msg")
     same_repo_cnt = 0
     same_bleu_sum = 0
