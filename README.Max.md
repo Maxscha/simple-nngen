@@ -37,5 +37,5 @@ files/scripts/multi-bleu.perl files/data/test.msg < files/data/results/nngen.tes
 ### New V1
 
 ```
-python3 nngen.py main files/data/files/data/standard_v1/train.260012.diff files/data/files/data/standard_v1/train.260012.msg files/data/files/data/standard_v1/train.260012.diff files/data/files/data/standard_v1/test.55717.diff files/data/files/data/standard_v1/test.55717.diff
+python3 nngen.py main files/data/standard_v1/train.260012.diff files/data/standard_v1/train.260012.msg files/data/standard_v1/train.260012.diff files/data/standard_v1/test.55717.diff files/data/standard_v1/test.55717.diff
 ```
