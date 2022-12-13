@@ -31,7 +31,7 @@ def find_mixed_nn(simi, diffs, test_diff, bleu_thre :int =5) -> int:
         cnt = cnt + 1
     return max_idx
 
-def nngen(train_diffs :List[str], train_msgs :List[str], test_diffs :List[str],
+def nngen(train_diffs :List[str], counter:CountVectorizer, train_matrix, train_msgs :List[str], test_diffs :List[str],
           train_repos :List[str], test_repos :List[str],
           mode :"'exc': excludes test commit repo, 'inc': only includes test commit repo" ='def',
     bleu_thre :"how many candidates to consider before calculating bleu_score" =5, ) -> List[str]:
@@ -41,10 +41,7 @@ def nngen(train_diffs :List[str], train_msgs :List[str], test_diffs :List[str],
     train set and test set to speed up the algorithm. You may also leverage GPU through
     pytorch or other libraries.
     """
-    counter = CountVectorizer(max_features=50_000)
-    train_matrix = counter.fit_transform(train_diffs)
 
-    print(train_matrix.shape)
     # print(len(counter.vocabulary_))
 
     # test_diffs = test_diffs[:9_763]
@@ -93,15 +90,25 @@ def main(train_diff_file :str, train_msg_file :str, train_repos_file :str,
 
     
     out_file =  f"{output_path}/nngen." + test_basename.replace('.diff', '.msg')
-    with open(out_file, 'w') as out_f:
-        n = 100
-        l = int(len(test_diffs) / n)
-        for i in range(0, n):
-            print(i)
-            test_diffs_sub = test_diffs[i*l:(i+1)*l]
-            out_res = nngen(train_diffs, train_msgs, test_diffs_sub, train_repos, test_repos)
+    counter = CountVectorizer(max_features=50_000)
+    train_matrix = counter.fit_transform(train_diffs)
+    print(train_matrix.shape)
+
+    out = []
+
     
-        out_f.write("\n".join(out_res[0]) + "\n")
+    n = 500
+    l = int(len(test_diffs) / n)
+
+    for i in range(0, n):
+        print(i)
+        test_diffs_sub = test_diffs[i*l:(i+1)*l]
+
+        out_res = nngen(train_diffs, counter, train_matrix, train_msgs, test_diffs_sub, train_repos, test_repos)
+        out.extend(out_res[0])
+    
+    with open(out_file, 'w') as out_f:
+        out_f.write("\n".join(out) + "\n")
 
     
     

@@ -41,10 +41,16 @@ def nngen(train_diffs :List[str], train_msgs :List[str], test_diffs :List[str],
     train set and test set to speed up the algorithm. You may also leverage GPU through
     pytorch or other libraries.
     """
-    counter = CountVectorizer()
+    counter = CountVectorizer(max_features=50_000)
     train_matrix = counter.fit_transform(train_diffs)
+
+    print(train_matrix.shape)
     # print(len(counter.vocabulary_))
+
+    test_diffs = test_diffs[:9_763]
+
     test_matrix = counter.transform(test_diffs)
+    print(test_matrix.shape)
     similarities = cosine_similarity(test_matrix, train_matrix)
     test_msgs = []
     test_selected_repos = []
@@ -69,7 +75,7 @@ def nngen(train_diffs :List[str], train_msgs :List[str], test_diffs :List[str],
     return (test_msgs, test_selected_repos)
 
 def main(train_diff_file :str, train_msg_file :str, train_repos_file :str, 
-         test_diff_file :str, test_repos_file :str):
+         test_diff_file :str, test_repos_file :str, output_path :str = '/files/data/results/'):
     """Run NNGen with default given dataset using default setting"""
     start_time = time.time()
     test_dirname = os.path.dirname(test_diff_file)
@@ -80,20 +86,24 @@ def main(train_diff_file :str, train_msg_file :str, train_repos_file :str,
     train_repos = load_data(train_repos_file)
     test_diffs = load_data(test_diff_file)
     test_repos = load_data(test_repos_file)
+
+    # output_path = '/files/data/results/'
+
+    os.makedirs(output_path, exist_ok=True)
     
-    inc_full_out_repos_file =  "./files/data/results/inc_full_nngen." + test_basename.replace('.diff', '.repos')
-    inc_out_repos_file =  "./files/data/results/inc_nngen." + test_basename.replace('.diff', '.repos')
-    exc_out_repos_file =  "./files/data/results/exc_nngen." + test_basename.replace('.diff', '.repos')
-    out_repos_file =  "./files/data/results/nngen." + test_basename.replace('.diff', '.repos')
+    inc_full_out_repos_file =  f"{output_path}/inc_full_nngen." + test_basename.replace('.diff', '.repos')
+    inc_out_repos_file =  f"{output_path}/inc_nngen." + test_basename.replace('.diff', '.repos')
+    exc_out_repos_file =  f"{output_path}/exc_nngen." + test_basename.replace('.diff', '.repos')
+    out_repos_file =  f"{output_path}/nngen." + test_basename.replace('.diff', '.repos')
     
-    inc_full_out_file =  "./files/data/results/inc_full_nngen." + test_basename.replace('.diff', '.msg')
+    inc_full_out_file =  f"{output_path}/inc_full_nngen." + test_basename.replace('.diff', '.msg')
     inc_full_out_res = nngen(train_diffs, train_msgs, test_diffs, train_repos, test_repos, 'inc', len(train_diffs))
     with open(inc_full_out_file, 'w') as out_f:
         out_f.write("\n".join(inc_full_out_res[0]) + "\n")
     with open(inc_full_out_repos_file, 'w') as out_f:
         out_f.write("\n".join(inc_full_out_res[1]) + "\n")
         
-    inc_out_file =  "./files/data/results/inc_nngen." + test_basename.replace('.diff', '.msg')
+    inc_out_file =  f"{output_path}/inc_nngen." + test_basename.replace('.diff', '.msg')
     inc_out_res = nngen(train_diffs, train_msgs, test_diffs, train_repos, test_repos, 'inc')
     with open(inc_out_file, 'w') as out_f:
         out_f.write("\n".join(inc_out_res[0]) + "\n")
@@ -101,13 +111,13 @@ def main(train_diff_file :str, train_msg_file :str, train_repos_file :str,
         out_f.write("\n".join(inc_out_res[1]) + "\n")
     
     exc_out_res = nngen(train_diffs, train_msgs, test_diffs, train_repos, test_repos, 'exc')
-    exc_out_file =  "./files/data/results/exc_nngen." + test_basename.replace('.diff', '.msg')
+    exc_out_file =  f"{output_path}/exc_nngen." + test_basename.replace('.diff', '.msg')
     with open(exc_out_file, 'w') as out_f:
         out_f.write("\n".join(exc_out_res[0]) + "\n")
     with open(exc_out_repos_file, 'w') as out_f:
         out_f.write("\n".join(exc_out_res[1]) + "\n")
     
-    out_file =  "./files/data/results/nngen." + test_basename.replace('.diff', '.msg')
+    out_file =  f"{output_path}/nngen." + test_basename.replace('.diff', '.msg')
     out_res = nngen(train_diffs, train_msgs, test_diffs, train_repos, test_repos)
     with open(out_file, 'w') as out_f:
         out_f.write("\n".join(out_res[0]) + "\n")
@@ -118,9 +128,9 @@ def main(train_diff_file :str, train_msg_file :str, train_repos_file :str,
     time_cost = time.time() -start_time
     print("Done, cost {}s".format(time_cost))
 
-    for algo in ["nngen", "inc_nngen", "exc_nngen"]:
-        print(algo)
-        compute_bleu_scores(algo)
+    # for algo in ["nngen", "inc_nngen", "exc_nngen"]:
+        # print(algo)
+        # compute_bleu_scores(algo, output_path=output_path)
 
 
 #     test_repos = load_data("./files/data/test.projectIds")
@@ -151,10 +161,10 @@ def main(train_diff_file :str, train_msg_file :str, train_repos_file :str,
 #             cnt = cnt + 1
 #     print ("Number of known exc_nngen repos similar to the test repos: " + str(cnt))
 
-def compute_bleu_scores(algorithm :str):
-    algo_repos = load_data("./files/data/results/" + algorithm + ".test.repos")
+def compute_bleu_scores(algorithm :str , output_path: str = '/files/data/results/'):
+    algo_repos = load_data(f"{output_path}/" + algorithm + ".test.repos")
     test_repos = load_data("./files/data/test.projectIds")
-    algo_msgs = load_data("./files/data/results/" + algorithm + ".test.msg")
+    algo_msgs = load_data(f"{output_path}/" + algorithm + ".test.msg")
     test_msgs = load_data("./files/data/test.msg")
     same_repo_cnt = 0
     same_bleu_sum = 0
